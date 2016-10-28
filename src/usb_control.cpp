@@ -50,23 +50,39 @@ namespace libusb_ext
   };
 
   template<typename T>
-  struct FeatureSelectorRecipient
+  /*struct FeatureSelectorRecipient
   {
     static uint8_t get();
   };
-
+  */
+  class FeatureSelectorRecipient
+  {
+    static uint8_t get();
+  };
   template<>
+  /*
   struct FeatureSelectorRecipient<DeviceFeatureSelector>
   {
     static uint8_t get() { return LIBUSB_RECIPIENT_DEVICE; };
   };
-
+  */
+  class FeatureSelectorRecipient<DeviceFeatureSelector>
+  {
+    static uint8_t get() { return LIBUSB_RECIPIENT_DEVICE; };
+  };
+  
   template<>
+  /*
   struct FeatureSelectorRecipient<InterfaceFeatureSelector>
   {
     static uint8_t get() { return LIBUSB_RECIPIENT_INTERFACE; };
   };
-
+  */
+  class FeatureSelectorRecipient<InterfaceFeatureSelector>
+  {
+    static uint8_t get() { return LIBUSB_RECIPIENT_INTERFACE; };
+  };
+  
   int set_isochronous_delay(libusb_device_handle *handle, int timeout)
   {
     // for details see USB 3.1 r1 spec section 9.4.11
