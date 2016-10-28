@@ -28,15 +28,26 @@
 
 #include "libfreenect2/allocator.h"
 #include "libfreenect2/threading.h"
+#include <new>
+#include <iostream>
+using namespace std;
 
 namespace libfreenect2
 {
 class NewAllocator: public Allocator
 {
 public:
-  virtual Buffer *allocate(size_t size)
+  virtual Buffer *allocate(size_t size);
+  virtual void NewAllocator::free(Buffer *b);
+};
+virtual Buffer* NewAllocator:: allocate(size_t size)
   {
+    try{
     Buffer *b = new Buffer;
+    }catch (std::bad_alloc& ba)
+    {
+    cerr << "bad_alloc caught: " << ba.what() << '\n';
+    }
     b->data = new unsigned char[size];
     b->length = 0;
     b->capacity = size;
@@ -44,15 +55,14 @@ public:
     return b;
   }
 
-  virtual void free(Buffer *b)
+virtual void NewAllocator::free(Buffer *b)
   {
     if (b == NULL)
       return;
     delete[] b->data;
     delete b;
   }
-};
-
+  
 class PoolAllocatorImpl: public Allocator
 {
 private:
@@ -63,8 +73,9 @@ private:
   condition_variable available_cond;
 public:
   PoolAllocatorImpl(Allocator *a): allocator(a), buffers(), used() {}
+};
 
-  Buffer *allocate(size_t size)
+Buffer* PoolAllocatorImpl::allocate(size_t size)
   {
     unique_lock guard(used_lock);
     while (used[0] && used[1])
@@ -90,26 +101,25 @@ public:
     }
   }
 
-  void free(Buffer *b)
+  void PoolAllocatorImpl::free(Buffer *b)
   {
     lock_guard guard(used_lock);
     if (b == buffers[0]) {
       used[0] = false;
       available_cond.notify_one();
-    } else if (b == buffers[1]) {
+    }
+      else if (b == buffers[1]) {
       used[1] = false;
       available_cond.notify_one();
     }
   }
 
-  ~PoolAllocatorImpl()
+ PoolAllocatorImpl::~PoolAllocatorImpl()
   {
     allocator->free(buffers[0]);
     allocator->free(buffers[1]);
     delete allocator;
   }
-};
-
 PoolAllocator::PoolAllocator():
   impl_(new PoolAllocatorImpl(new NewAllocator))
 {
