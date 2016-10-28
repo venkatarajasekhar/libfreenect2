@@ -64,15 +64,20 @@ Logger::Level Logger::getDefaultLevel()
     std::transform(env_logger_level_str.begin(), env_logger_level_str.end(), env_logger_level_str.begin(), ::tolower);
 
     if(env_logger_level_str == "debug")
-      l = Logger::Debug;
+        Logger::Debug = 1;
+      //l = Logger::Debug;
     else if(env_logger_level_str == "info")
-      l = Logger::Info;
+      //l = Logger::Info;
+      Logger::Info = 1;
     else if(env_logger_level_str == "warning")
-      l = Logger::Warning;
+      //l = Logger::Warning;
+      Logger::Warning = 1;
     else if(env_logger_level_str == "error")
-      l = Logger::Error;
+      //l = Logger::Error;
+      Logger::Error = 1;
     else if(env_logger_level_str == "none")
-      l = Logger::None;
+      //l = Logger::None;
+      Logger::None = 1;
   }
 
   return l;
@@ -125,12 +130,26 @@ public:
 
 Logger *createConsoleLogger(Logger::Level level)
 {
-  return new ConsoleLogger(level);
+  Logger::Level* consolelogger = new(sizeof(Logger::Level*));  
+  /*
+   1.level is the C++ Object,Needs to copy the memory of object level to ConsoleLogger
+   2.As for the software Requirement ConsoleLogger(level);
+  
+  */
+  ConsoleLogger(consolelogger);  
+  return ConsoleLogger;
 }
 
 Logger *createConsoleLoggerWithDefaultLevel()
 {
-  return new ConsoleLogger(Logger::getDefaultLevel());
+  Logger::Level* ConsoleLogger = new(sizeof(Logger::Level*));  
+  /*
+   1.level is the C++ Object,Needs to copy the memory of object level to ConsoleLogger
+   2.As for the software Requirement 
+    Logger::getDefaultLevel();
+  */
+  ConsoleLogger = Logger::getDefaultLevel();  
+  return ConsoleLogger;
 }
 
 LogMessage::LogMessage(Logger *logger, Logger::Level level) : logger_(logger), level_(level)
@@ -142,15 +161,15 @@ std::string getShortName(const char *func)
 {
   std::string src(func);
   size_t end = src.rfind('(');
-  if (end == std::string::npos)
+  if (std::string::npos == end)
     end = src.size();
   size_t begin = 1 + src.rfind(' ', end);
   size_t first_ns = src.find("::", begin);
-  if (first_ns != std::string::npos)
+  if (std::string::npos != first_ns)
     begin = first_ns + 2;
   size_t last_ns = src.rfind("::", end);
-  if (last_ns != std::string::npos)
-    end = last_ns;
+  if (std::string::npos != last_ns)
+     last_ns = end;
   return src.substr(begin, end - begin);
 }
 
